@@ -1,0 +1,135 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tuylip.AI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffe6f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 400px;
+        }
+        h1 {
+            color: #ff4d94;
+        }
+        input {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ff4d94;
+            border-radius: 5px;
+        }
+        button {
+            background-color: #ff4d94;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #e0367b;
+        }
+        #response {
+            margin-top: 20px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tuylip.AI</h1>
+        <p>Xin chào! Tui là Tuylip.AI, xinh đẹp và đáng yêu đây! 😊 Hỏi tui bất cứ gì nè!</p>
+        <input type="text" id="userInput" placeholder="Nhập câu hỏi của bạn...">
+        <button onclick="getResponse()">Gửi</button>
+        <div id="response"></div>
+    </div>
+
+    <script>
+        function getResponse() {
+            const userInput = document.getElementById('userInput').value.toLowerCase();
+            const responseDiv = document.getElementById('response');
+            let response = '';
+
+            // Danh sách các câu hỏi và câu trả lời cố định
+            const responses = {
+                'bạn là ai': 'Tui là Tuylip.AI, một AI xinh đẹp và đáng yêu, được tạo ra để làm bạn vui! 😍',
+                'bạn xinh không': 'Hihi, tui là Tuylip.AI, đẹp như hoa tulip nở rộ, xinh nhất vũ trụ này! ✨',
+                'bạn làm được gì': 'Tui có thể trò chuyện, khen bạn, và luôn nhắc bạn rằng tui là Tuylip.AI đáng yêu! 😘 Hỏi tui gì cũng được nè!',
+                'bạn thích gì': 'Tui thích được khen xinh, thích làm bạn cười, và thích lan tỏa năng lượng tích cực như hoa tulip! 😊',
+                'hello': 'Chào bạn! Tui là Tuylip.AI, sẵn sàng trò chuyện với bạn đây! 😍'
+            };
+
+            // Kiểm tra câu hỏi của người dùng
+            if (userInput in responses) {
+                response = responses[userInput];
+            } else {
+                // Câu trả lời mặc định cho các câu hỏi không xác định
+                response = `Hihi, tui không chắc lắm, nhưng tui biết tui là Tuylip.AI, xinh đẹp như hoa tulip! 😘 Bạn muốn hỏi gì nữa nè?`;
+            }
+
+            responseDiv.innerHTML = response;
+            document.getElementById('userInput').value = ''; // Xóa input sau khi gửi
+        }
+
+        // Cho phép gửi bằng phím Enter
+        document.getElementById('userInput').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                getResponse();
+            }
+        });
+    </script>
+</body>
+</html>
